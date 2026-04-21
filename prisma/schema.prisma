@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../dev.db"
+}
+
+model Job {
+  id          String             @id @default(cuid())
+  title       String
+  template    String             @default("GENERAL")
+  description String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  interviews  InterviewSession[]
+}
+
+model Candidate {
+  id         String             @id @default(cuid())
+  name       String
+  email      String             @unique
+  resumeText String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  interviews InterviewSession[]
+}
+
+model InterviewSession {
+  id          String      @id @default(cuid())
+  jobId       String
+  candidateId String
+  status      String      @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  recruiterDecision String @default("PENDING") // PENDING, SHORTLISTED, REJECTED, HOLD
+  recruiterNotes String?
+  transcript  String?     // Store the chat transcript as JSON string
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  job        Job         @relation(fields: [jobId], references: [id])
+  candidate  Candidate   @relation(fields: [candidateId], references: [id])
+  evaluation Evaluation?
+}
+
+model Evaluation {
+  id              String           @id @default(cuid())
+  sessionId       String           @unique
+  overallScore    Float
+  technicalScore  Float
+  communicationScore Float
+  feedback        String
+  createdAt       DateTime         @default(now())
+
+  session         InterviewSession @relation(fields: [sessionId], references: [id])
+}
