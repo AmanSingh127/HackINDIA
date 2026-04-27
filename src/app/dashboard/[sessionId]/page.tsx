@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, User, Briefcase, FileText, BarChart3, MessageSquare, Activity } from "lucide-react";
 import { DecisionForm } from "./decision-form";
 
-export default async function DashboardDetailsPage({ params }: { params: { sessionId: string } }) {
+export default async function DashboardDetailsPage({ params }: { params: Promise<{ sessionId: string }> }) {
+  const { sessionId } = await params;
+
   const session = await prisma.interviewSession.findUnique({
-    where: { id: params.sessionId },
-    include: { candidate: true, job: true, evaluation: true },
+    where: { id: sessionId },
+    include: { candidate: true, job: true, evaluation: true, resumeScreening: true },
   });
 
   if (!session) return notFound();
@@ -67,8 +69,41 @@ export default async function DashboardDetailsPage({ params }: { params: { sessi
             </div>
           </div>
 
-          {/* AI Evaluation */}
+          {/* Screening & Evaluation */}
           <div className="md:col-span-2 space-y-6">
+            
+            {/* Resume Screening */}
+            {session.resumeScreening && (
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-400" /> Resume Screening Results
+                  </h3>
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wider ${
+                    session.resumeScreening.decision === 'SHORTLISTED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                    session.resumeScreening.decision === 'REJECTED' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                    'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  }`}>
+                    {session.resumeScreening.decision}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-8 mb-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-white mb-1">{session.resumeScreening.score}/100</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Match Score</div>
+                  </div>
+                  <div className="h-12 w-px bg-white/10"></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                      {session.resumeScreening.feedback}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* AI Evaluation */}
             {session.evaluation ? (
               <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
                 <h3 className="font-semibold text-lg flex items-center gap-2 mb-6">

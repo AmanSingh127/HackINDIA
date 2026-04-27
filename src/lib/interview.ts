@@ -3,14 +3,16 @@ import { createGroqClient, getGroqApiKey, getGroqModelName, isGroqRateLimitError
 
 export function getTemplateInstruction(template: string): string {
   switch (template) {
+    case "FULLSTACK":
+      return "Ask scenario-based questions about full-stack architecture: how they'd design systems end-to-end, handle API scaling, choose databases, debug production issues across frontend and backend, and make technology tradeoffs.";
     case "FRONTEND":
-      return "Focus on React, performance, state management, accessibility, and debugging browser issues.";
+      return "Ask scenario-based questions about frontend architecture: how they'd handle performance bottlenecks, design component systems, manage complex state, ensure accessibility, debug rendering issues, and make UX tradeoffs.";
     case "BACKEND":
-      return "Focus on APIs, databases, reliability, scalability, and system design tradeoffs.";
+      return "Ask scenario-based questions about backend systems: how they'd design APIs for scale, handle database optimization, ensure reliability and fault tolerance, approach microservices vs monolith decisions, and debug production incidents.";
     case "DATA":
-      return "Focus on SQL, data modeling, basic ML intuition, and analytical communication.";
+      return "Ask scenario-based questions about data systems: how they'd design data pipelines, optimize slow queries, model complex domains, handle data consistency, and communicate analytical findings to non-technical stakeholders.";
     default:
-      return "Focus on practical software engineering and problem-solving across stack layers.";
+      return "Ask scenario-based questions about real-world software engineering: system design, debugging production issues, architecture decisions, and technology tradeoffs.";
   }
 }
 

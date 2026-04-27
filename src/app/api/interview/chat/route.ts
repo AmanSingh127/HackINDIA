@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const apiKey = getGroqApiKey();
     if (!apiKey) {
       aiReply = isInitial 
-        ? `Hello ${session.candidate.name}, welcome to the interview for the ${session.job.title} role. Could you start by telling me a bit about your background? (Note: MOCK MODE - Groq API key not set in .env)`
+        ? `Hello ${session.candidate.name}, welcome to the Full Stack Engineer coding round for the ${session.job.title} role. Let's begin with a coding problem: design and implement a secure API endpoint for creating todos with input validation and proper error handling. (Note: MOCK MODE - Groq API key not set in .env)`
         : "That's interesting! Can you elaborate more on your experience with this technology? (Note: MOCK MODE)";
     } else {
       // Use Groq API
@@ -72,11 +72,21 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Groq client initialization failed" }, { status: 500 });
       }
       
-      const systemInstruction = `
-        You are a professional technical interviewer hiring for the role of ${session.job.title}.
-        The candidate's name is ${session.candidate.name}.
-        Their background: ${session.candidate.resumeText}.
-        Interview template guidance: ${getTemplateInstruction(session.job.template)}.
+      let safeResumeText = session.candidate.resumeText || "Candidate did not provide a resume.";
+      if (safeResumeText.startsWith("%PDF-") || safeResumeText.includes("\x00")) {
+        safeResumeText = "[The candidate's resume was uploaded in an unreadable binary format. Please ask them directly about their background and experience instead of referring to the resume document.]";
+      }
+
+      const systemInstruction = `You are a professional technical interviewer hiring for the role of ${session.job.title}.
+    
+Job Description:
+${session.job.description}
+
+Candidate Profile:
+Name: ${session.candidate.name}
+Resume/Background: ${safeResumeText.substring(0, 3000)}
+
+Interview template guidance: ${getTemplateInstruction(session.job.template)}.
         
         Guidelines:
         1. Keep responses concise (1-2 short paragraphs).
@@ -102,7 +112,7 @@ export async function POST(req: Request) {
               role: "user",
               content:
                 isInitial
-                  ? "Start the interview by introducing yourself briefly and asking the first question."
+                  ? "Start directly with the coding round for a Full Stack Engineer. Do not ask background/introduction questions first. Ask one practical coding question involving frontend + backend thinking."
                   : shouldAutoComplete
                     ? "This was the final candidate answer. Wrap up the interview in 2-3 lines, thank them, and clearly state interview is complete."
                     : message,
@@ -114,7 +124,7 @@ export async function POST(req: Request) {
       } catch (error: unknown) {
         if (isGroqRateLimitError(error)) {
           aiReply = isInitial
-            ? `Hello ${session.candidate.name}, welcome to the interview for the ${session.job.title} role. Could you start by telling me a bit about your background? (Note: Groq rate limit exceeded, running in fallback mode)`
+            ? `Hello ${session.candidate.name}, welcome to the Full Stack Engineer coding round for the ${session.job.title} role. Let's begin with a coding problem: build an API for login with validation and clear error responses. (Note: Groq rate limit exceeded, running in fallback mode)`
             : "Thanks for your response. Please continue with one concrete example from your past project. (Note: Groq rate limit exceeded, running in fallback mode)";
         } else {
           throw error;

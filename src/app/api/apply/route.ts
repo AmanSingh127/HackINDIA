@@ -10,8 +10,8 @@ export async function POST(req: Request) {
     }
 
     // 1. Ensure Job exists by title + template
-    const normalizedTitle = (jobTitle || "Software Engineer").trim();
-    const normalizedTemplate = (jobTemplate || "GENERAL").trim();
+    const normalizedTitle = (jobTitle || "Full Stack Developer").trim();
+    const normalizedTemplate = (jobTemplate || "FULLSTACK").trim();
     let job = await prisma.job.findFirst({
       where: {
         title: normalizedTitle,

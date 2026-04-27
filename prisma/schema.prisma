@@ -43,9 +43,11 @@ model InterviewSession {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  job        Job         @relation(fields: [jobId], references: [id])
-  candidate  Candidate   @relation(fields: [candidateId], references: [id])
-  evaluation Evaluation?
+  job             Job              @relation(fields: [jobId], references: [id])
+  candidate       Candidate        @relation(fields: [candidateId], references: [id])
+  evaluation      Evaluation?
+  videoRecordings VideoRecording[]
+  resumeScreening ResumeScreening?
 }
 
 model Evaluation {
@@ -58,4 +60,27 @@ model Evaluation {
   createdAt       DateTime         @default(now())
 
   session         InterviewSession @relation(fields: [sessionId], references: [id])
+}
+
+model VideoRecording {
+  id              String           @id @default(cuid())
+  sessionId       String
+  questionIndex   Int
+  videoUrl        String
+  durationSeconds Int              @default(0)
+  createdAt       DateTime         @default(now())
+
+  session         InterviewSession @relation(fields: [sessionId], references: [id])
+}
+
+model ResumeScreening {
+  id              String           @id @default(cuid())
+  sessionId       String           @unique
+  score           Float
+  criteriaScores  String           // JSON string representing individual criteria scores and reasoning
+  decision        String           // SHORTLISTED, REJECTED, REVIEW
+  feedback        String           // General feedback to the candidate
+  createdAt       DateTime         @default(now())
+
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }

@@ -14,8 +14,8 @@ export default function ApplyPage() {
     name: "",
     email: "",
     resumeText: "",
-    jobTitle: "Software Engineer", // Default for the hackathon
-    jobTemplate: "GENERAL",
+    jobTitle: "Full Stack Developer", // Default for the hackathon
+    jobTemplate: "FULLSTACK",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,8 +47,29 @@ export default function ApplyPage() {
     if (!file) return;
     setUploadingResume(true);
     try {
-      const rawText = await file.text();
-      setFormData((prev) => ({ ...prev, resumeText: rawText }));
+      const isPdfOrDocx = 
+        file.type === "application/pdf" || 
+        file.name.toLowerCase().endsWith(".pdf") ||
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.name.toLowerCase().endsWith(".docx");
+
+      if (isPdfOrDocx) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/parse-resume", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to parse document");
+        }
+        const data = await res.json();
+        setFormData((prev) => ({ ...prev, resumeText: data.text }));
+      } else {
+        const rawText = await file.text();
+        setFormData((prev) => ({ ...prev, resumeText: rawText }));
+      }
       setResumeFileName(file.name);
     } catch (error) {
       console.error(error);
@@ -133,12 +154,21 @@ export default function ApplyPage() {
             <select
               className="w-full bg-slate-900/50 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               value={formData.jobTemplate}
-              onChange={(e) => setFormData({ ...formData, jobTemplate: e.target.value })}
+              onChange={(e) => {
+                const template = e.target.value;
+                const titleMap: Record<string, string> = {
+                  AI_ML: "AI/ML Engineer",
+                  FULLSTACK: "Full Stack Developer",
+                  CYBERSECURITY: "Cybersecurity",
+                  CLOUD: "Cloud Computing"
+                };
+                setFormData({ ...formData, jobTemplate: template, jobTitle: titleMap[template] || "Full Stack Developer" });
+              }}
             >
-              <option value="GENERAL">General Software</option>
-              <option value="FRONTEND">Frontend Engineer</option>
-              <option value="BACKEND">Backend Engineer</option>
-              <option value="DATA">Data/Analytics</option>
+              <option value="FULLSTACK">Full Stack Developer</option>
+              <option value="AI_ML">AI/ML Engineer</option>
+              <option value="CYBERSECURITY">Cybersecurity</option>
+              <option value="CLOUD">Cloud Computing</option>
             </select>
           </div>
 
